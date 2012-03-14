@@ -1,4 +1,4 @@
-package com.mysql.workbench.events
+package plugin.events
 {
 	import flash.events.Event;
 	

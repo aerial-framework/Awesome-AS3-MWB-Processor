@@ -2,7 +2,7 @@ package plugin.doctrine
 {
 	import com.mysql.workbench.FileWriter;
 	import com.mysql.workbench.Inflector;
-	import com.mysql.workbench.events.CodeGenEvent;
+	import plugin.events.CodeGenEvent;
 	import com.mysql.workbench.model.Column;
 	import com.mysql.workbench.model.DomesticKey;
 	import com.mysql.workbench.model.ForeignKey;
