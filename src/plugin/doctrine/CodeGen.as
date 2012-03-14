@@ -2,7 +2,6 @@ package plugin.doctrine
 {
 	import com.mysql.workbench.FileWriter;
 	import com.mysql.workbench.Inflector;
-	import plugin.events.CodeGenEvent;
 	import com.mysql.workbench.model.Column;
 	import com.mysql.workbench.model.DomesticKey;
 	import com.mysql.workbench.model.ForeignKey;
@@ -14,6 +13,8 @@ package plugin.doctrine
 	import flash.events.EventDispatcher;
 	
 	import mx.utils.StringUtil;
+	
+	import plugin.events.CodeGenEvent;
 	
 	public class CodeGen extends EventDispatcher
 	{
@@ -41,7 +42,8 @@ package plugin.doctrine
 			if(!servicePackage)
 				throw new Error("'servicePackage' not set.");	
 			
-			for each (var table:Table in schema.tables)
+			var table:Table
+			for each (table in schema.tables)
 			{
 				if(tables && (tables.indexOf(table.name) == -1))
 					continue;
@@ -52,7 +54,7 @@ package plugin.doctrine
 				fw.indentForward().add('public $modelName = "'+ table.className +'";').newLine();
 				fw.indentBack().add('}').newLine();
 				fw.indentBack().add('?>').newLine(3);
-
+				
 				var codegenEvent:CodeGenEvent = new CodeGenEvent(CodeGenEvent.CREATED);
 				
 				codegenEvent.fileType = CodeGen.SERVICE;
@@ -66,20 +68,52 @@ package plugin.doctrine
 		
 		public function generateModels(tables:Array=null):void
 		{
+			generateSubClassModels(tables);
+			generateBaseModels(tables);
+		}
+		
+		public function generateSubClassModels(tables:Array=null):void
+		{
 			if(!modelPackage)
 				throw new Error("'modelPackage' not set.");	
 			
 			var table:Table
-			
-			//Build the Base Models
 			for each (table in schema.tables)
 			{
 				if(tables && (tables.indexOf(table.name) == -1))
 					continue;
-					
 				fw.clear();
 				fw.add('<?php').newLine(2);
-				fw.add('abstract class Base'+ table.className +' extends Aerial_Record').newLine();
+				fw.add('class ' + table.className + ' extends ' + Inflector.ucfirst(this.baseModelFolderName) + table.className).newLine();
+				fw.add('{').newLine(2);
+				fw.add('}')
+				
+				//Dispatch an event containing the generated content.
+				var codegenEvent:CodeGenEvent = new CodeGenEvent(CodeGenEvent.CREATED);
+				
+				codegenEvent.fileType = CodeGen.MODEL;
+				codegenEvent.filePackage = this.modelPackage;
+				codegenEvent.fileName = table.className + ".php";
+				codegenEvent.fileContent = fw.stream;
+				
+				dispatchEvent(codegenEvent);
+			}
+		}
+		
+		public function generateBaseModels(tables:Array=null):void
+		{
+			if(!modelPackage)
+				throw new Error("'modelPackage' not set.");	
+			
+			var table:Table
+			for each (table in schema.tables)
+			{
+				if(tables && (tables.indexOf(table.name) == -1))
+					continue;
+				
+				fw.clear();
+				fw.add('<?php').newLine(2);
+				fw.add('abstract class '+ Inflector.ucfirst(this.baseModelFolderName) + table.className +' extends Aerial_Record').newLine();
 				fw.add('{').newLine().indentForward();
 				fw.add('public function setTableDefinition()').newLine();
 				fw.add('{').newLine().indentForward();
@@ -178,14 +212,12 @@ package plugin.doctrine
 				var codegenEvent:CodeGenEvent = new CodeGenEvent(CodeGenEvent.CREATED);
 				
 				codegenEvent.fileType = CodeGen.BASE_MODEL;
-				codegenEvent.filePackage = this.modelPackage + ".base";
-				codegenEvent.fileName = "Base" + table.className + ".php";
+				codegenEvent.filePackage = this.modelPackage + "." + this.baseModelFolderName;
+				codegenEvent.fileName = Inflector.ucfirst(this.baseModelFolderName) + table.className + ".php";
 				codegenEvent.fileContent = fw.stream;
 				
 				dispatchEvent(codegenEvent);
-			}//End Table
-			
-			
+			}//End Table Loop
 		}
 		
 	}
