@@ -2,6 +2,7 @@ package plugin.doctrine
 {
 	import com.mysql.workbench.FileWriter;
 	import com.mysql.workbench.Inflector;
+	import com.mysql.workbench.events.CodeGenEvent;
 	import com.mysql.workbench.model.Column;
 	import com.mysql.workbench.model.DomesticKey;
 	import com.mysql.workbench.model.ForeignKey;
@@ -9,10 +10,17 @@ package plugin.doctrine
 	import com.mysql.workbench.model.Schema;
 	import com.mysql.workbench.model.Table;
 	
+	import flash.events.Event;
+	import flash.events.EventDispatcher;
+	
 	import mx.utils.StringUtil;
 	
-	public class CodeGen
+	public class CodeGen extends EventDispatcher
 	{
+		public static const BASE_MODEL:String = "baseModel";
+		public static const MODEL:String = "model";
+		public static const SERVICE:String = "service";
+		
 		private var schema:Schema;
 		
 		public var modelPackage:String;
@@ -28,13 +36,15 @@ package plugin.doctrine
 			fw = new FileWriter();
 		}
 		
-		public function generateServices():void
+		public function generateServices(tables:Array=null):void
 		{
 			if(!servicePackage)
 				throw new Error("'servicePackage' not set.");	
 			
 			for each (var table:Table in schema.tables)
 			{
+				if(tables && (tables.indexOf(table.name) == -1))
+					continue;
 				fw.clear();
 				fw.add('<?php').newLine();
 				fw.indentForward().add('import("aerialframework.service.AbstractService");').newLine(2);
@@ -43,7 +53,14 @@ package plugin.doctrine
 				fw.indentBack().add('}').newLine();
 				fw.indentBack().add('?>').newLine(3);
 
-				trace(fw.stream);
+				var codegenEvent:CodeGenEvent = new CodeGenEvent(CodeGenEvent.CREATED);
+				
+				codegenEvent.fileType = CodeGen.SERVICE;
+				codegenEvent.filePackage = this.servicePackage;
+				codegenEvent.fileName = table.className + "Service" + ".php";
+				codegenEvent.fileContent = fw.stream;
+				
+				dispatchEvent(codegenEvent);
 			}
 		}
 		
@@ -143,7 +160,7 @@ package plugin.doctrine
 				
 				for each(var dk:DomesticKey in table.domesticKeys)
 				{
-					fw.add("$this->hasMany('"+dk.referencedTable.className+" as "+Inflector.pluralCamelize(dk.referencedTable.className)+"', array(").newLine().indentForward();
+					fw.add("$this->hasMany('"+ dk.referencedTable.className +" as "+Inflector.pluralCamelize(dk.referencedTable.className)+"', array(").newLine().indentForward();
 					fw.add("'local' => '"+ Column(table.primaryKey.columns[0]).name +"',").newLine();
 					fw.add("'foreign' => '"+ dk.referencedColumn.name +"'));").newLine().indentBack();
 				}
@@ -155,12 +172,21 @@ package plugin.doctrine
 				fw.add("$this->mapValue('_explicitType', '"+this.modelPackage+"."+table.className+"');").newLine().indentBack();
 				fw.add("}").newLine().indentBack();
 				
+				fw.add("}");
+				
+				//Dispatch an event containing the generated content.
+				var codegenEvent:CodeGenEvent = new CodeGenEvent(CodeGenEvent.CREATED);
+				
+				codegenEvent.fileType = CodeGen.BASE_MODEL;
+				codegenEvent.filePackage = this.modelPackage + ".base";
+				codegenEvent.fileName = "Base" + table.className + ".php";
+				codegenEvent.fileContent = fw.stream;
+				
+				dispatchEvent(codegenEvent);
 			}//End Table
-			fw.add("}");
-			trace(fw.stream);
+			
+			
 		}
-		
-		
 		
 	}
 }
