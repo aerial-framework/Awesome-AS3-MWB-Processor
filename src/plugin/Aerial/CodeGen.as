@@ -72,7 +72,7 @@ package plugin.Aerial
 				
 				codegenEvent.fileType = CodeGen.SERVICE;
 				codegenEvent.filePackage = this.servicePackage;
-				codegenEvent.fileName = table.className + "Service" + ".php";
+				codegenEvent.fileName = table.className + "Service" + ".as";
 				codegenEvent.fileContent = fw.stream;
 				
 				dispatchEvent(codegenEvent);
