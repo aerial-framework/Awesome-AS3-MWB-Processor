@@ -1,4 +1,4 @@
-package plugin.Aerial
+package plugin.aerial
 {
 	import com.mysql.workbench.FileWriter;
 	import com.mysql.workbench.Inflector;
