@@ -17,7 +17,7 @@ package com.mysql.workbench.model
 				this.loadByteArray(mwbFile);
 		}
 		
-		public function loadByteArray(mwbFile:ByteArrayAsset):void
+		public function loadByteArray(mwbFile:ByteArray):void
 		{
 			var zipFile:ZipFile = new ZipFile(mwbFile);
 			var ba:ByteArray = zipFile.getInput(zipFile.getEntry(MWB_XML_NAME));
