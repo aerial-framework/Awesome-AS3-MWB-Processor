@@ -26,7 +26,7 @@ package com.mysql.workbench.model
 			type = DatatypeConverter.getDataType(xml.link.(@key == 'simpleType'));
 			isNotNull = Boolean(int(xml.value.(@key=='isNotNull')));
 			autoIncrement = Boolean(int(xml.value.(@key=='autoIncrement')));
-			defaultValue = String(xml.value.(@key == 'defaultValue')).replace(/(?:\s*["|'])?(.*)(?:"|')/,'$1');//We need to strip out single & double quote wrappers.
+			defaultValue = String(xml.value.(@key == 'defaultValue')).replace(/(?:\s*["|'])?(.*)(?:"|')/,'$1');//Strip out single & double quote wrappers.
 			dataTypeExplicitParams = xml.value.(@key == 'datatypeExplicitParams');
 			var typeLength:int = int(xml.value.(@key == 'length'));
 			if(typeLength != -1)

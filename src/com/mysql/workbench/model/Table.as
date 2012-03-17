@@ -116,11 +116,8 @@ package com.mysql.workbench.model
 					key2.referencedTable.relations.push(relationKey);
 					break;
 				}
-					
-					
 			}
 		}
-		
 		
 	}
 }

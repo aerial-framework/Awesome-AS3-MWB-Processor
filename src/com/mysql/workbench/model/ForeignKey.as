@@ -16,7 +16,9 @@ package com.mysql.workbench.model
 			name = xml.value.(@key=='name');
 			column = Registry.getInstance().getModel(xml.value.(@key=='columns').link[0].toString()) as Column;
 			
-			//We base the class name of the relationship off the fk column.
+			//We base the class name of the relationship off the fk column.  We can't
+			//use referencedTable.className because we could have two references to the
+			//same table.  i.e., 'Image" & 'DefaultImage' point to 'Image'.
 			if(column.name.substr(-2, 2) == "Id")
 				columnClassName = column.name.substr(0,column.name.length - 2);
 			columnClassName = Inflector.singularPascalize(columnClassName);
