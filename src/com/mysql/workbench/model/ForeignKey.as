@@ -19,7 +19,7 @@ package com.mysql.workbench.model
 			//We base the class name of the relationship off the fk column.  We can't
 			//use referencedTable.className because we could have two references to the
 			//same table.  i.e., 'Image" & 'DefaultImage' point to 'Image'.
-			if(column.name.substr(-2, 2) == "Id")
+			if(column.name.substr(-2, 2) == "Id" || column.name.substr(-3, 3) == "_id")
 				columnClassName = column.name.substr(0,column.name.length - 2);
 			columnClassName = Inflector.singularPascalize(columnClassName);
 			
