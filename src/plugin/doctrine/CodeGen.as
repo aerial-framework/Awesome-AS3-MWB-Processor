@@ -193,9 +193,18 @@ package plugin.doctrine
 					fw.add("'foreign' => '"+ fk.referencedColumn.name +"'));").newLine().indentBack();
 				}
 				
+				var alias:String;
+				var aliases:Array = new Array();
 				for each(var dk:DomesticKey in table.domesticKeys)
 				{
-					fw.add("$this->hasMany('"+ dk.referencedTable.className +" as "+Inflector.pluralCamelize(dk.referencedTable.className)+"', array(").newLine().indentForward();
+					//There's a possibility of repeating aliases in cases like self referencing using a refClass.
+					alias = Inflector.pluralCamelize(dk.referencedTable.className);
+					if(!aliases["_" + alias])
+						aliases["_" + alias] = 1;
+					else
+						aliases["_" + alias]++;
+
+					fw.add("$this->hasMany('"+ dk.referencedTable.className +" as "+ alias + (aliases["_" + alias] > 1 ? aliases["_" + alias] : "" ) +"', array(").newLine().indentForward();
 					fw.add("'local' => '"+ Column(table.primaryKey.columns[0]).name +"',").newLine();
 					fw.add("'foreign' => '"+ dk.referencedColumn.name +"'));").newLine().indentBack();
 				}
@@ -206,7 +215,7 @@ package plugin.doctrine
 				{
 					var t1:XML = xmlMN.table.(text() == tableName)[0];
 					var t2:XML = xmlMN.table.(text() != tableName)[0];
-					var alias:String = (t2.attribute("alias").length() > 0 ? t2.attribute("alias") : t2.text());
+					alias = (t2.attribute("alias").length() > 0 ? t2.attribute("alias") : t2.text());
 					
 					fw.add("$this->hasMany('"+ t2.text() +" as "+ Inflector.pluralCamelize(alias) +"', array(").newLine().indentForward();
 					fw.add("'refClass' => '"+ xmlMN.@joinTable +"',").newLine();
