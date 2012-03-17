@@ -23,11 +23,12 @@ package plugin.doctrine
 		public static const SERVICE:String = "service";
 		
 		private var schema:Schema;
+		private var fw:FileWriter;
 		
 		public var modelPackage:String;
 		public var servicePackage:String;
 		public var baseModelFolderName:String = "base";
-		public var fw:FileWriter;
+		public var relationships:XML;
 		
 		public function CodeGen(schema:Schema)
 		{
@@ -198,7 +199,22 @@ package plugin.doctrine
 					fw.add("'local' => '"+ Column(table.primaryKey.columns[0]).name +"',").newLine();
 					fw.add("'foreign' => '"+ dk.referencedColumn.name +"'));").newLine().indentBack();
 				}
-				fw.indentBack().add("}").newLine(2);
+				
+				//Custom Relationships: Many
+				var tableName:String = table.name;
+				for each(var xmlMN:XML in relationships.mn.(table.(text() == tableName).parent()))
+				{
+					var t1:XML = xmlMN.table.(text() == tableName)[0];
+					var t2:XML = xmlMN.table.(text() != tableName)[0];
+					var alias:String = (t2.attribute("alias").length() > 0 ? t2.attribute("alias") : t2.text());
+					
+					fw.add("$this->hasMany('"+ t2.text() +" as "+ Inflector.pluralCamelize(alias) +"', array(").newLine().indentForward();
+					fw.add("'refClass' => '"+ xmlMN.@joinTable +"',").newLine();
+					fw.add("'local' => '"+ t1.@fk +"',").newLine();
+					fw.add("'foreign' => '"+ t2.@fk +"'));").newLine().indentBack();
+				}
+				
+				fw.indentBack().add("}").newLine(2); //Close Relationships
 				
 				//_explicitType
 				fw.add("public function construct()").newLine();
@@ -206,7 +222,7 @@ package plugin.doctrine
 				fw.add("$this->mapValue('_explicitType', '"+this.modelPackage+"."+table.className+"');").newLine().indentBack();
 				fw.add("}").newLine().indentBack();
 				
-				fw.add("}");
+				fw.add("}");//Close Class
 				
 				//Dispatch an event containing the generated content.
 				var codegenEvent:CodeGenEvent = new CodeGenEvent(CodeGenEvent.CREATED);
