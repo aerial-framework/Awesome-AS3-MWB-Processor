@@ -15,18 +15,18 @@ package plugin.aerial
 	
 	public class CodeGen extends EventDispatcher
 	{
-		
 		public static const MODEL:String = "model";
 		public static const SERVICE:String = "service";
 		
 		private var schema:Schema;
+		public var fw:FileWriter;
 		
 		public var modelPackage:String;
 		public var servicePackage:String;
 		public var bootstrapPackage:String;
 		public var modelSuffix:String = "VO";
 		public var serviceSuffix:String = "Service";
-		public var fw:FileWriter;
+		public var relationships:XML;
 		
 		public function CodeGen(schema:Schema)
 		{
@@ -165,9 +165,18 @@ package plugin.aerial
 				}
 				
 				//Getters & Setters: Many
+				var alias:String;
+				var aliases:Array = new Array();
 				for each(dk in table.domesticKeys)
 				{
-					dkName = Inflector.pluralCamelize(dk.referencedTable.className);
+					//There's a possibility of repeating aliases in cases like self referencing using a refClass.
+					alias = Inflector.pluralCamelize(dk.referencedTable.className);
+					if(!aliases["_" + alias])
+						aliases["_" + alias] = 1;
+					else
+						aliases["_" + alias]++;
+					
+					dkName = alias + (aliases["_" + alias] > 1 ? aliases["_" + alias] : "" );
 					fw.newLine();
 					
 					fw.add("public function get "+ dkName +"():ArrayCollection").newLine();
