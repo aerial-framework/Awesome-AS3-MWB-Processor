@@ -66,58 +66,5 @@ package com.mysql.workbench.model
 			}
 		}
 		
-		public function loadRelationHelper():void
-		{
-			var comment:String = String(xml.value.(@key=='comment'));
-			var relation:Array = comment.match(/<aerial:(\w+).*(?:\/>|<\/aerial:\1>)/i);
-			if(relation)
-			{
-				var relationXml:XML = XML(String(relation[0]).replace("aerial:", ""));
-				var relationType:String = relation[1];
-			}
-			
-			switch(relationType)
-			{
-				case "mn":{
-					var relationKey:RelationKey = new RelationKey();
-					var keys:Array = String(relationXml.@keys).split(/,\s*/);
-					var aliases:Array = String(relationXml.@aliases).split(/,\s*/);
-					
-					for each(var fk:ForeignKey in this.foreignKeys)
-					{
-						if(keys[0] == fk.column.name)
-							var key1:ForeignKey =  fk;
-						if(keys[1] == fk.column.name)
-							var key2:ForeignKey =  fk;
-					}
-
-					/*Set the relation's alias name*/
-					if(aliases[0] && (String(aliases[0]).length > 0))
-						relationKey.relationName = Inflector.pluralCamelize(aliases[0]); 
-					else
-					{
-						relationKey.relationName = Inflector.pluralCamelize(key1.referencedTable.className);
-					}
-					
-					/*Set the relations foreign alias name*/
-					if(aliases[1] && (String(aliases[1]).length > 0))
-						relationKey.foreignAlias = Inflector.pluralCamelize(aliases[1]); 
-					else
-					{
-						relationKey.foreignAlias = Inflector.pluralCamelize(key2.referencedTable.className);
-					}
-					
-					relationKey.referencedTable = key1.referencedTable;
-					relationKey.joinTable = this;
-					relationKey.joinLocal = key2.column;
-					relationKey.joinForeign = key1.column;
-					
-					//We're adding the relation to the table of the second key/alias in the setting.
-					key2.referencedTable.relations.push(relationKey);
-					break;
-				}
-			}
-		}
-		
 	}
 }

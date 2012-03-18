@@ -37,12 +37,6 @@ package com.mysql.workbench.model
 				table.loadDomesticKeys();
 			}
 			
-			/*Set relational helper directives*/
-			for each(table in tables)
-			{
-				table.loadRelationHelper()
-			}
-			
 			/*Set Views*/  //Not implemented yet
 			var xmlViews:XML = xml.value.(@key=='views')[0];
 			for each(var xmlView:XML in xmlViews)
