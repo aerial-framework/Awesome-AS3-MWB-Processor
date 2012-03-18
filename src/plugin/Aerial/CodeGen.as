@@ -89,13 +89,23 @@ package plugin.aerial
 			var fk:ForeignKey;
 			var dk:DomesticKey;
 			var table:Table
-			var dkName:String;
+			var tmpName:String;
+			var as3Type:String;
+			var t1:XML;
+			var t2:XML
+			var xmlMN:XML;
+			var xmlSelf:XML;
+			var xmlFK:XML
+			var alias:String;
+			var aliases:Array = new Array();
 			
 			for each (table in schema.tables)
 			{
 				if(tables && (tables.indexOf(table.name) == -1))
 					continue;
 				
+				var tableName:String = table.name; //e4x var
+
 				fw.clear();
 				fw.add("package " + modelPackage).newLine();
 				fw.add("{").newLine().indentForward();
@@ -123,26 +133,55 @@ package plugin.aerial
 				//Private vars: One 
 				for each(fk in table.foreignKeys)
 				{
-					fw.add("private var _" + fk.referencedTable.className + ":*;").newLine();
+					fw.add("private var _" + fk.columnClassName + ":*;").newLine();
 				}
 				
 				//Private vars: Many
+				aliases = new Array();
 				for each(dk in table.domesticKeys)
 				{
-					fw.add("private var _"+ Inflector.pluralCamelize(dk.referencedTable.className) + ":*;").newLine();
+					//There's a possibility of repeating aliases in cases like self referencing using a refClass.
+					alias = Inflector.pluralCamelize(dk.referencedTable.className);
+					if(!aliases["_" + alias])
+						aliases["_" + alias] = 1;
+					else
+						aliases["_" + alias]++;
+					tmpName = alias + (aliases["_" + alias] > 1 ? aliases["_" + alias] : "" );
+
+					fw.add("private var _"+ tmpName + ":*;").newLine();
+				}
+
+				//Private vars: Custom Many
+				for each(xmlMN in relationships.mn.(table.(text() == tableName).parent()))
+				{
+					t1 = xmlMN.table.(text() == tableName)[0];
+					t2 = xmlMN.table.(text() != tableName)[0];
+					alias = (t2.attribute("alias").length() > 0 ? t2.attribute("alias") : t2.text());
+
+					fw.add("private var _"+ Inflector.pluralCamelize(alias) + ":*;").newLine();
+				}
+
+				//Private vars: Custom Self
+				for each(xmlSelf in relationships.self.(@table == tableName))
+				{
+					for each(xmlFK in xmlSelf.fk)
+					{
+						fw.add("private var _"+ Inflector.pluralCamelize(xmlFK.@alias) + ":*;").newLine();
+					}
 				}
 				
 				//Getters & Setters
 				for each (column in table.columns)
 				{
 					fw.newLine();
-					
-					fw.add("public function get "+ column.name +"():" + getAS3Type(column.rawType)).newLine();
+					as3Type = getAS3Type(column.rawType);
+
+					fw.add("public function get "+ column.name +"():" + as3Type).newLine();
 					fw.add("{").newLine().indentForward();
 					fw.add("return _" + column.name).newLine().indentBack();
 					fw.add("}").newLine(2);
 					
-					fw.add("public function set "+ column.name +"(value:XXX):void").newLine();
+					fw.add("public function set "+ column.name +"(value:"+ as3Type +"):void").newLine();
 					fw.add("{").newLine().indentForward();
 					fw.add("_" + column.name + " = value;").newLine().indentBack();
 					fw.add("}").newLine();
@@ -153,20 +192,19 @@ package plugin.aerial
 				{
 					fw.newLine();
 					
-					fw.add("public function get "+ fk.referencedTable.className +"():"+ fk.referencedTable.className + this.modelSuffix +"").newLine();
+					fw.add("public function get "+ fk.columnClassName +"():"+ fk.referencedTable.className + this.modelSuffix +"").newLine();
 					fw.add("{").newLine().indentForward();
-					fw.add("return _"+ fk.referencedTable.className +";").newLine().indentBack();
+					fw.add("return _"+ fk.columnClassName +";").newLine().indentBack();
 					fw.add("}").newLine(2);
 					
-					fw.add("public function set "+ fk.referencedTable.className +"(value:"+fk.referencedTable.className + this.modelSuffix+"):void").newLine();
+					fw.add("public function set "+ fk.columnClassName +"(value:"+fk.referencedTable.className + this.modelSuffix+"):void").newLine();
 					fw.add("{").newLine().indentForward();
-					fw.add("_"+ fk.referencedTable.className +" = value;").newLine().indentBack();
+					fw.add("_"+ fk.columnClassName +" = value;").newLine().indentBack();
 					fw.add("}").newLine();
 				}
 				
 				//Getters & Setters: Many
-				var alias:String;
-				var aliases:Array = new Array();
+				aliases = new Array();
 				for each(dk in table.domesticKeys)
 				{
 					//There's a possibility of repeating aliases in cases like self referencing using a refClass.
@@ -176,22 +214,60 @@ package plugin.aerial
 					else
 						aliases["_" + alias]++;
 					
-					dkName = alias + (aliases["_" + alias] > 1 ? aliases["_" + alias] : "" );
+					tmpName = alias + (aliases["_" + alias] > 1 ? aliases["_" + alias] : "" );
 					fw.newLine();
 					
-					fw.add("public function get "+ dkName +"():ArrayCollection").newLine();
+					fw.add("public function get "+ tmpName +"():ArrayCollection").newLine();
 					fw.add("{").newLine().indentForward();
-					fw.add("return _" +  dkName + ";").newLine().indentBack();
+					fw.add("return _" +  tmpName + ";").newLine().indentBack();
 					fw.add("}").newLine(2);
 					
-					fw.add("public function set "+ dkName +"(value:ArrayCollection):void").newLine();
+					fw.add("public function set "+ tmpName +"(value:ArrayCollection):void").newLine();
 					fw.add("{").newLine().indentForward();
-					fw.add("_" + dkName + " = value;").newLine().indentBack();
+					fw.add("_" + tmpName + " = value;").newLine().indentBack();
 					fw.add("}").newLine();
 				}
 				
-				fw.indentBack().add("}").newLine().indentBack().add("}");
+				//Custom Relationships: Many
+				for each(xmlMN in relationships.mn.(table.(text() == tableName).parent()))
+				{
+					t1 = xmlMN.table.(text() == tableName)[0];
+					t2 = xmlMN.table.(text() != tableName)[0];
+					alias = (t2.attribute("alias").length() > 0 ? t2.attribute("alias") : t2.text());
+
+					tmpName = Inflector.pluralCamelize(alias);
+					fw.newLine();
+					fw.add("public function get "+ tmpName +"():ArrayCollection").newLine();
+					fw.add("{").newLine().indentForward();
+					fw.add("return _" +  tmpName + ";").newLine().indentBack();
+					fw.add("}").newLine(2);
+
+					fw.add("public function set "+ tmpName +"(value:ArrayCollection):void").newLine();
+					fw.add("{").newLine().indentForward();
+					fw.add("_" + tmpName + " = value;").newLine().indentBack();
+					fw.add("}").newLine();
+				}
+
+				//Custom Relationships: Self
+				for each(xmlSelf in relationships.self.(@table == tableName))
+				{
+					for each(xmlFK in xmlSelf.fk)
+					{
+						tmpName = Inflector.pluralCamelize(xmlFK.@alias);
+						fw.newLine();
+						fw.add("public function get "+ tmpName +"():ArrayCollection").newLine();
+						fw.add("{").newLine().indentForward();
+						fw.add("return _" +  tmpName + ";").newLine().indentBack();
+						fw.add("}").newLine(2);
+
+						fw.add("public function set "+ tmpName +"(value:ArrayCollection):void").newLine();
+						fw.add("{").newLine().indentForward();
+						fw.add("_" + tmpName + " = value;").newLine().indentBack();
+						fw.add("}").newLine();
+					}
+				}
 				
+				fw.indentBack().add("}").newLine().indentBack().add("}"); //Close class
 				
 				//Dispatch CodeGen Event
 				var codegenEvent:CodeGenEvent = new CodeGenEvent(CodeGenEvent.CREATED);
