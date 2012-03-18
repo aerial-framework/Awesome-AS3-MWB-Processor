@@ -223,6 +223,18 @@ package plugin.doctrine
 					fw.add("'foreign' => '"+ t2.@fk +"'));").newLine().indentBack();
 				}
 				
+				//Custom Relationships: Self
+				for each(var xmlSelf:XML in relationships.self.(@table == tableName))
+				{
+					for each(var xmlFK:XML in xmlSelf.fk)
+					{
+						fw.add("$this->hasMany('"+ table.name +" as "+ Inflector.pluralCamelize(xmlFK.@alias) +"', array(").newLine().indentForward();
+						fw.add("'refClass' => '"+ xmlSelf.@joinTable +"',").newLine();
+						fw.add("'local' => '"+ table.primaryKey.columns[0].name +"',").newLine();
+						fw.add("'foreign' => '"+ xmlFK.text() +"'));").newLine().indentBack();
+					}
+				}
+
 				fw.indentBack().add("}").newLine(2); //Close Relationships
 				
 				//_explicitType
