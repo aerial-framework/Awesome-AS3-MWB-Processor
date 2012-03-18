@@ -186,8 +186,8 @@ package plugin.doctrine
 				
 				for each(var fk:ForeignKey in table.foreignKeys)
 				{  
-					fw.add("$this->hasOne('" + fk.columnClassName
-						+(fk.columnClassName != fk.referencedTable.className ? " as "+ fk.referencedTable.className : "")
+					fw.add("$this->hasOne('" + fk.referencedTable.className
+						+(fk.columnClassName != fk.referencedTable.className ? " as "+ fk.columnClassName : "")
 						+"', array(").newLine().indentForward();
 					fw.add("'local' => '"+ fk.column.name +"',").newLine();
 					fw.add("'foreign' => '"+ fk.referencedColumn.name +"'));").newLine().indentBack();
