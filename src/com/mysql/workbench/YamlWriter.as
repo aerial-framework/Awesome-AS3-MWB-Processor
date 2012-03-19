@@ -7,6 +7,7 @@ package com.mysql.workbench
 		private var _stream:String = "";
 		private var _indentCount:int = 0;
 		private var _indent:int = 2;
+		private var _lineEnding:String = "\n";
 		
 		public function YamlWriter()
 		{
@@ -42,7 +43,7 @@ package com.mysql.workbench
 		
 		public function addLineBreak():void
 		{
-			_stream += "\n";
+			_stream += this.lineEnding;
 		}
 		
 		private function  get currentIndent():String
@@ -75,6 +76,17 @@ package com.mysql.workbench
 		{
 			return _stream;
 		}
+
+		public function get lineEnding():String
+		{
+			return _lineEnding;
+		}
+
+		public function set lineEnding(value:String):void
+		{
+			_lineEnding = value;
+		}
+
 	}
 }
 

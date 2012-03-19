@@ -12,7 +12,7 @@ package com.mysql.workbench
 		private var _indentPosition:int = 0; //Keep track of new line indent position.
 		private var _indentSize:int = 4; //Number of spaces to use for new line indentation.
 		private var _cleanLine:Boolean = true;
-		
+		private var _lineEnding:String = "\n";
 		
 		public function get indentSize():int
 		{
@@ -96,7 +96,7 @@ package com.mysql.workbench
 			if(n == 0) 
 				return this;
 			
-			_stream += StringUtil.repeat("\n",n); //Add the number of line breaks;
+			_stream += StringUtil.repeat(this.lineEnding,n); //Add the number of line breaks;
 			_stream += currentIndent; //Set the cursor at the current indent position;
 			_cleanLine = true;
 			return this;
@@ -107,8 +107,15 @@ package com.mysql.workbench
 			this.stream += text;
 			return this;
 		}
-			
-		
-		
+
+		public function get lineEnding():String
+		{
+			return _lineEnding;
+		}
+
+		public function set lineEnding(value:String):void
+		{
+			_lineEnding = value;
+		}		
 	}
 }
