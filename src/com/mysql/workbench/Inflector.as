@@ -75,11 +75,13 @@ package com.mysql.workbench
 			if (pluralrules == null) {
 				initPluralRules();
 			}
+
+			word = "**" + word;
 			
 			if (pluralized[word] != null)
 			{
 				//trace ("word already pluralized");
-				return pluralized[word];
+				return fix(pluralized[word]);
 			}
 			
 			var tmatches:Array = new Array ();
@@ -88,7 +90,7 @@ package com.mysql.workbench
 			{
 				//trace ("irregular word");
 				pluralized[word] = tmatches[1] + irregularplural[String(tmatches[2]).toLowerCase()];
-				return pluralized[word];
+				return fix(pluralized[word]);
 			}
 			
 			tmatches = word.match(new RegExp("^(" + regexuninflectedplural + ")$", "i"));
@@ -96,7 +98,7 @@ package com.mysql.workbench
 			{
 				//trace ("uninflected word");
 				pluralized[word] = word;
-				return word;
+				return fix(word);
 			}
 			
 			for each (var rule:Array in pluralrules )
@@ -106,12 +108,28 @@ package com.mysql.workbench
 				if (tmatches && tmatches.length > 0)
 				{
 					pluralized[word] = word.replace(new RegExp(rule[0], "i"),rule[1]);
-					return pluralized[word];
+					return fix(pluralized[word]);
 				}
 			}
 			
-			return pluralized[word] = word;
+			return fix(pluralized[word] = word);
 		}
+
+		/**
+		 * Remove prefix from word to prevent internal AS3 property/function name conflicts
+		 *
+		 * @param word
+		 * @param char
+		 * @return
+		 */
+		static private function fix(word:String, char:String="**"):String
+		{
+			if(word.substr(0, char.length) != char)
+				return word;
+			
+			return word.substr(char.length);
+		}
+		
 		/**
 		 * Return word in plural form.
 		 *
