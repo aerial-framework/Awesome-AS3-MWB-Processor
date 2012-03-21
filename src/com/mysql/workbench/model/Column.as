@@ -14,6 +14,8 @@ package com.mysql.workbench.model
 		public var isNotNull:Boolean = false;
 		public var isPrimary:Boolean = false;
 		public var isUnique:Boolean = false;
+		public var isUnsigned:Boolean = false;
+		public var isZeroFill:Boolean = false;
 		public var dataTypeExplicitParams:String;
 		public var owner:Table;
 		
@@ -23,6 +25,19 @@ package com.mysql.workbench.model
 			
 			name = xml.value.(@key=='name');
 			propertyName = Inflector.singularCamelize(name);
+			for each(var xmlFlag:XML in xml.value.(@key=='flags').value)
+			{
+				switch (String(xmlFlag.text()))
+				{
+					case "UNSIGNED":
+						isUnsigned = true;
+						break;
+					
+					case "ZEROFILL":
+						isZeroFill = true;
+						break;
+				}
+			}
 			type = DatatypeConverter.getDataType(xml.link.(@key == 'simpleType'));
 			isNotNull = Boolean(int(xml.value.(@key=='isNotNull')));
 			autoIncrement = Boolean(int(xml.value.(@key=='autoIncrement')));
