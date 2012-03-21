@@ -21,8 +21,13 @@ package com.mysql.workbench.model
 			{
 				var columnId:String = xmlColumn.link.(@key=='referencedColumn').toString();
 				var column:Column = Registry.getInstance().getModel(columnId) as Column;
+
 				if(isPrimary)
 					column.isPrimary = true;
+				
+				if(isUnique)
+					column.isUnique = true;
+				
 				columns.push(column);
 			}
 			
