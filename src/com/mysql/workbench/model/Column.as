@@ -13,7 +13,6 @@ package com.mysql.workbench.model
 		public var defaultValue:String;
 		public var isNotNull:Boolean = false;
 		public var isPrimary:Boolean = false;
-		public var isUnique:Boolean = false;
 		public var isUnsigned:Boolean = false;
 		public var isZeroFill:Boolean = false;
 		public var dataTypeExplicitParams:String;
