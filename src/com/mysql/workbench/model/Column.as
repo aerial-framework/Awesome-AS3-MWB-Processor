@@ -37,7 +37,10 @@ package com.mysql.workbench.model
 						break;
 				}
 			}
-			type = DatatypeConverter.getDataType(xml.link.(@key == 'simpleType'));
+			type = xml.link.(@key == 'simpleType');
+			if(!type)
+				type = xml.link.(@key == 'userType');
+			type = DatatypeConverter.getDataType(type);
 			isNotNull = Boolean(int(xml.value.(@key=='isNotNull')));
 			autoIncrement = Boolean(int(xml.value.(@key=='autoIncrement')));
 			defaultValue = String(xml.value.(@key == 'defaultValue')).replace(/(?:\s*["|'])?(.*)(?:"|')/,'$1');//Strip out single & double quote wrappers.
