@@ -25,9 +25,6 @@ package com.mysql.workbench.model
 				if(isPrimary)
 					column.isPrimary = true;
 				
-				if(isUnique)
-					column.isUnique = true;
-				
 				columns.push(column);
 			}
 			
