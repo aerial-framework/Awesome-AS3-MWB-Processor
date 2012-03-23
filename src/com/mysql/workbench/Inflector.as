@@ -221,6 +221,9 @@ package com.mysql.workbench
 		 */
 		static public function camelize(lowercaseandunderscoreword:String):String
 		{
+			if(!lowercaseandunderscoreword)
+				return "";
+
 			//var replace:String = str_replace(" ", "", ucwords(str_replace("_", " ", $lowerCaseAndUnderscoredWord)));
 			var tarray:Array = lowercaseandunderscoreword.split("_");
 			
